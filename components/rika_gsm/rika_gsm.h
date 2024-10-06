@@ -27,14 +27,14 @@ class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
   void loop() override;
   void dump_config() override;
 
-  void send_sms(std::string const &message);
-  void set_pin(std::string const &);
-  void set_phone_number(std::string const &);
+  void send_sms(const std::string &message);
+  void set_pin(const std::string &pin);
+  void set_phone_number(const std::string &phone_number);
 #ifdef USE_TEXT_SENSOR
-  void set_raw_status_sensor(text_sensor::TextSensor *);
+  void set_raw_status_sensor(text_sensor::TextSensor *raw_status_sensor);
 #endif
 #ifdef USE_BINARY_SENSOR
-  void set_gsm_status_binary_sensor(binary_sensor::BinarySensor *);
+  void set_gsm_status_binary_sensor(binary_sensor::BinarySensor *gsm_status_sensor);
 #endif
 
  protected:
@@ -58,19 +58,21 @@ class RikaGSMComponent : public uart::UARTDevice, public PollingComponent {
   void send_query();
   void reset_pending_query();
   void reset_stove_request();
-  void set_state(State);
+  void set_state(State state);
   void reset_state();
 
-  AT_Command parse_command(std::string const &) const;
-  std::string state_to_string(State) const;
+  AT_Command parse_command(const std::string &command) const;
+  std::string state_to_string(State state) const;
 };
 
-template<typename... Ts> class RikaGsmSendCommandAction : public Action<Ts...> {
+// Correction de la syntaxe du template
+template<typename... Ts> 
+class RikaGsmSendCommandAction : public Action<Ts...> {
  public:
   RikaGsmSendCommandAction(RikaGSMComponent *parent) : parent_(parent) {}
   TEMPLATABLE_VALUE(std::string, command)
 
-  void play(Ts... x) {
+  void play(Ts... x) override {
     auto command = this->command_.value(x...);
     this->parent_->send_sms(command);
   }
