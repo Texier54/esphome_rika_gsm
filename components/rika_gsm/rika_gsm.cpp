@@ -1,6 +1,5 @@
 #include "esphome/core/log.h"
 #include "esphome/core/helpers.h"
-
 #include "rika_gsm.h"
 
 namespace esphome {
@@ -12,29 +11,29 @@ static constexpr uint8_t ASCII_LF = 0x0A;
 static constexpr uint8_t ASCII_SUB = 0x1A;
 
 void RikaGSMComponent::loop() {
-  // check state
+  // Vérification de l'état
   if (this->state_ == State::STATE_INIT) {
     this->reset_state();
     this->set_state(State::READ_STOVE_AT_COMMAND);
   }
 
-  // read bytes
+  // Lecture des octets
   while (this->available()) {
     char byte = this->read();
 
     if (this->state_ == State::READ_STOVE_OUTGOING_SMS) {
-      if ((byte == ASCII_SUB)) {
+      if (byte == ASCII_SUB) {
         this->set_state(State::STOVE_OUTGOING_SMS_COMPLETE);
-        ESP_LOGD(TAG, this->raw_stove_status_.c_str());
+        ESP_LOGD(TAG, "%s", this->raw_stove_status_.c_str());
         break;
       }
       this->raw_stove_status_ += byte;
     }
 
     if (this->state_ == State::READ_STOVE_AT_COMMAND) {
-      if ((byte == ASCII_LF) || (byte == ASCII_SUB) || (byte == ASCII_CR)) {
+      if (byte == ASCII_LF || byte == ASCII_SUB || byte == ASCII_CR) {
         this->set_state(State::STOVE_AT_COMMAND_COMPLETE);
-        ESP_LOGD(TAG, this->stove_request_.c_str());
+        ESP_LOGD(TAG, "%s", this->stove_request_.c_str());
         break;
       }
       this->stove_request_ += byte;
@@ -55,14 +54,18 @@ void RikaGSMComponent::dump_config() {
 #endif
 }
 
-void RikaGSMComponent::send_sms(std::string const &message) {
+void RikaGSMComponent::send_sms(const std::string &message) {
   this->pending_sms_command_ = message;
   this->send_pending_ = true;
 }
 
-void RikaGSMComponent::set_pin(std::string const &pin) { this->pin_ = pin; }
+void RikaGSMComponent::set_pin(const std::string &pin) {
+  this->pin_ = pin;
+}
 
-void RikaGSMComponent::set_phone_number(std::string const &number) { this->phone_number_ = number; }
+void RikaGSMComponent::set_phone_number(const std::string &number) {
+  this->phone_number_ = number;
+}
 
 #ifdef USE_TEXT_SENSOR
 void RikaGSMComponent::set_raw_status_sensor(text_sensor::TextSensor *raw_sensor) {
@@ -118,16 +121,16 @@ void RikaGSMComponent::update() {
 
   switch (command) {
     case AT_Command::CMGR:
-      ESP_LOGV(TAG, "Stove Request: Read sms");
-      if (!this->send_pending_ || this->pending_sms_command_.size() == 0) {
-        ESP_LOGV(TAG, "\t nothing to read");
+      ESP_LOGV(TAG, "Stove Request: Read SMS");
+      if (!this->send_pending_ || this->pending_sms_command_.empty()) {
+        ESP_LOGV(TAG, "\tNothing to read");
         this->send_carriage_return();
         this->send_ok();
         this->set_state(State::STATE_INIT);
         return;
       }
 
-      ESP_LOGV(TAG, "\t writing sms: %s", this->pending_sms_command_.c_str());
+      ESP_LOGV(TAG, "\tWriting SMS: %s", this->pending_sms_command_.c_str());
       this->send_query();
       this->set_state(State::STATE_INIT);
       return;
@@ -147,7 +150,7 @@ void RikaGSMComponent::update() {
     case AT_Command::CNMI:
     case AT_Command::CMGF:
     case AT_Command::IPR:
-      ESP_LOGV(TAG, "Stove Request: configuration\n\t %s", this->stove_request_.c_str());
+      ESP_LOGV(TAG, "Stove Request: Configuration\n\t %s", this->stove_request_.c_str());
       this->send_ok();
       this->set_state(State::STATE_INIT);
       return;
@@ -190,7 +193,9 @@ void RikaGSMComponent::reset_pending_query() {
   this->send_pending_ = false;
 }
 
-void RikaGSMComponent::reset_stove_request() { this->stove_request_ = ""; }
+void RikaGSMComponent::reset_stove_request() {
+  this->stove_request_ = "";
+}
 
 void RikaGSMComponent::set_state(State state) {
   this->state_ = state;
@@ -202,7 +207,7 @@ void RikaGSMComponent::reset_state() {
   this->raw_stove_status_ = "";
 }
 
-AT_Command RikaGSMComponent::parse_command(std::string const &command) const {
+AT_Command RikaGSMComponent::parse_command(const std::string &command) const {
   if (esphome::str_startswith(command, "AT+CMGR"))
     return AT_Command::CMGR;
   if (esphome::str_startswith(command, "AT+CMGS"))
@@ -241,5 +246,4 @@ std::string RikaGSMComponent::state_to_string(State state) const {
   return "UNKNOWN_STATE";
 }
 
-}  // end namespace rika_gsm
-}  // end namespace esphome
+}  // namespace rika_gsm
