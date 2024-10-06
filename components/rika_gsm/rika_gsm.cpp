@@ -1,6 +1,6 @@
-#include "esphome/core/log.h"
-#include "esphome/core/helpers.h"
-#include "rika_gsm.h"
+include "esphome/core/log.h"
+include "esphome/core/helpers.h"
+include "rika_gsm.h"
 
 namespace esphome {
 namespace rika_gsm {
