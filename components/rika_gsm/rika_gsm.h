@@ -1,6 +1,6 @@
 #pragma once
 #include "esphome/core/defines.h"
-#include "esphome/core/component.h"
+include "esphome/core/component.h"
 #include "esphome/components/uart/uart.h"
 #ifdef USE_TEXT_SENSOR
 #include "esphome/components/text_sensor/text_sensor.h"
